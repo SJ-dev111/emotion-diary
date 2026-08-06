@@ -1,0 +1,3 @@
+# GUI — LGPL v3 (onedir 배포로 준수. PyQt6·QtCharts 등 GPL 모듈 사용 금지)
+# PDF 내보내기도 Qt에 들어 있는 QPdfWriter로 하므로 외부 의존성은 이것뿐이다.
+PySide6>=6.7

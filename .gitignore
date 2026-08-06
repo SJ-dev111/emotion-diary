@@ -1,0 +1,83 @@
+# 가상환경
+venv/
+env/
+.venv/
+
+# Python 캐시 / 컴파일 파일
+__pycache__/
+*.py[cod]
+*.pyc
+.pytest_cache/
+.coverage
+htmlcov/
+
+# PyInstaller 빌드 산출물
+build/
+dist/
+*.zip
+# 아이콘은 tools/make_icon.py가 그려 내는 생성물이라 커밋하지 않는다
+app/ui_qt/assets/app_icon.ico
+app/ui_qt/assets/app_icon.icns
+app/ui_qt/assets/app_icon_preview.png
+
+# 개인 일기 데이터 - 절대 커밋 금지
+*.db
+*.sqlite
+*.sqlite3
+/data/
+/exports/
+
+# SQLite 임시/저널 파일 - 일기 내용이 담길 수 있음, 절대 커밋 금지
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite-journal
+*.sqlite3-journal
+
+# 백업/내보내기 결과물 - 일기 내용 포함, 절대 커밋 금지
+/backups/
+*백업*.json
+*backup*.json
+*백업*.pdf
+*backup*.pdf
+*.bak
+
+# 공유용 내보내기 결과물 - 일기 내용 포함, 절대 커밋 금지
+# 저장할 때 이름을 바꾸거나 하위 폴더에 넣어도 걸리도록 확장자로 막는다
+# (예전의 '/감정일기*.html' 식 규칙은 기본 파일명 그대로일 때만 걸렸다).
+# HTML은 이 프로젝트에서 소스가 아니라 내보내기 산출물뿐이라 전부 막아도
+# 잃을 것이 없다. PDF도 예외 없이 막는다 — 일기를 내보낸 PDF와 설계용
+# PDF를 파일명만으로 가려내기는 위험하다 (v1.0 공개를 앞두고 화면 스케치
+# PDF를 추적에서 뺐다).
+*.html
+*.pdf
+
+# 설명용으로 붙여 넣은 화면 캡처 (루트에 둔 것만 — assets 아이콘은 제외)
+/image*.png
+
+# 실행 상태 파일 (첫 실행 감지 플래그, 로컬 설정 등 - 실제 파일명에 맞게 조정)
+first_run.json
+settings.json
+
+# API 키 / 환경변수 (지금은 안 쓰지만 예방 차원)
+.env
+.env.*
+
+# Claude Code 로컬 설정 (API 키·토큰이 들어갈 수 있음)
+.claude/settings.local.json
+
+# IDE
+.vscode/
+.idea/
+
+# OS / OneDrive
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 임시 파일
+*.tmp
+~$*
+
+# 로그
+*.log

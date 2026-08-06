@@ -1,0 +1,30 @@
+# exe 속성(자세히 탭)에 보이는 정보. PyInstaller가 읽어 넣는다.
+# 버전은 app/config.py의 APP_VERSION과 맞춘다 (tools/build.py가 확인).
+VSVersionInfo(
+  ffi=FixedFileInfo(
+    filevers=(1, 0, 0, 0),
+    prodvers=(1, 0, 0, 0),
+    mask=0x3f,
+    flags=0x0,
+    OS=0x40004,
+    fileType=0x1,
+    subtype=0x0,
+    date=(0, 0)
+  ),
+  kids=[
+    StringFileInfo(
+      [
+        StringTable(
+          '041204B0',            # 한국어(0x0412) / 유니코드(1200)
+          [StringStruct('CompanyName', ''),
+           StringStruct('FileDescription', '감정일기 — 감정을 적고 돌아보는 일기장'),
+           StringStruct('FileVersion', '1.0.0'),
+           StringStruct('InternalName', 'EmotionDiary'),
+           StringStruct('LegalCopyright', ''),
+           StringStruct('OriginalFilename', 'EmotionDiary.exe'),
+           StringStruct('ProductName', '감정일기'),
+           StringStruct('ProductVersion', '1.0.0')])
+      ]),
+    VarFileInfo([VarStruct('Translation', [0x0412, 1200])])
+  ]
+)

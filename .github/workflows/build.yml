@@ -1,0 +1,171 @@
+# 개발자에게 Mac이 없어서, macOS 빌드와 확인을 GitHub이 빌려주는 Mac에서 한다.
+# Windows 테스트도 함께 돌려 macOS 작업 때문에 기존 동작이 깨지지 않았는지 본다.
+#
+# 자동 실행은 테스트만 (가볍다). 배포본 빌드는 손으로 돌린다 —
+# private 저장소에서 macOS는 분당 10배로 계산되기 때문.
+name: 테스트 · 배포본 빌드
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:        # Actions 탭에서 손으로 실행
+    inputs:
+      build_macos:
+        description: "macOS 배포본(.app)까지 만들기"
+        type: boolean
+        default: true
+
+jobs:
+  test:
+    name: 테스트 (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false      # 한쪽이 깨져도 다른 쪽 결과는 봐야 한다
+      matrix:
+        os: [windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 의존성 설치
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: 단위 테스트
+        run: python -m unittest discover -s tests -v
+
+      - name: 앱이 실제로 뜨는지 확인
+        env:
+          QT_QPA_PLATFORM: offscreen   # 화면 없는 서버라 창을 그리지 않는다
+        run: python tools/verify_app.py
+
+  build-macos:
+    name: macOS 배포본 (Apple Silicon)
+    # 테스트가 통과해야 빌드한다
+    needs: test
+    # 손으로 돌릴 때만. push마다 빌드하면 macOS 분(分)이 10배로 빠진다
+    if: github.event_name == 'workflow_dispatch' && inputs.build_macos
+    runs-on: macos-latest    # Apple Silicon (arm64)
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 의존성 설치
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt pyinstaller
+
+      - name: 빌드 (.app + zip)
+        run: python tools/build.py
+
+      - name: 번들 구조 확인
+        run: |
+          APP="dist/EmotionDiary.app"
+          BIN="$APP/Contents/MacOS/EmotionDiary"
+          test -x "$BIN" || { echo "실행 파일이 없습니다: $BIN"; exit 1; }
+
+          echo "── 아키텍처 (Apple Silicon이어야 한다)"
+          file "$BIN"
+          file "$BIN" | grep -q arm64 || { echo "arm64가 아닙니다"; exit 1; }
+
+          echo "── Info.plist (한글 표시 이름이 들어갔는지)"
+          # defaults read는 한글을 감... 이스케이프로 뱉어 비교가 어렵다.
+          # plistlib으로 읽으면 문자열 그대로 나온다.
+          python - "$APP/Contents/Info.plist" <<'PY'
+          import plistlib, sys
+          with open(sys.argv[1], "rb") as f:
+              info = plistlib.load(f)
+          for key in ("CFBundleName", "CFBundleDisplayName",
+                      "CFBundleShortVersionString", "CFBundleIdentifier",
+                      "NSHighResolutionCapable"):
+              print(f"  {key} = {info.get(key)!r}")
+          expected = {"CFBundleName": "감정일기",
+                      "CFBundleDisplayName": "감정일기",
+                      "CFBundleShortVersionString": "1.0.0"}
+          wrong = {k: info.get(k) for k, v in expected.items()
+                   if info.get(k) != v}
+          if wrong:
+              sys.exit(f"Info.plist 값이 다릅니다: {wrong}")
+          PY
+
+          echo "── 아이콘"
+          test -f "$APP/Contents/Resources/app_icon.icns" \
+            || { echo ".icns가 번들에 없습니다"; exit 1; }
+
+          echo "── 동봉 문서"
+          ls "$APP/Contents/Resources/LICENSES"
+          test -f "$APP/Contents/Resources/README.txt" \
+            || { echo "README.txt가 없습니다"; exit 1; }
+
+      - name: 소스 기준 동작 확인
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: python tools/verify_app.py
+
+      - name: 빌드된 .app을 실제로 띄워 본다
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          # 여기까지는 '빌드가 됐다'와 '소스가 돈다'만 봤다. 정작 배포되는
+          # 것은 .app 안의 실행 파일이므로, 그것을 직접 띄워 스스로 저장
+          # 폴더와 DB를 만드는지 확인한다.
+          DB="$HOME/Library/Application Support/감정일기/emotion_diary.db"
+          rm -rf "$HOME/Library/Application Support/감정일기"
+
+          "dist/EmotionDiary.app/Contents/MacOS/EmotionDiary" &
+          APP_PID=$!
+
+          # 첫 실행이면 가이드·바로가기 팝업이 떠서 창이 계속 살아 있다.
+          # DB는 창을 만들 때 생기므로 그것이 나타나기를 기다린다.
+          for i in $(seq 1 30); do
+            [ -f "$DB" ] && break
+            sleep 1
+          done
+
+          if ! kill -0 $APP_PID 2>/dev/null; then
+            echo "앱이 스스로 죽었습니다"; wait $APP_PID; exit 1
+          fi
+          test -f "$DB" || { echo "DB가 만들어지지 않았습니다: $DB"; kill $APP_PID; exit 1; }
+
+          echo "DB 생성됨: $(ls -l "$DB" | awk '{print $5}') bytes"
+          # 스키마가 실제로 깔렸는지 (빈 파일만 만들고 죽는 경우를 거른다)
+          python - "$DB" <<'PY'
+          import sqlite3, sys
+          conn = sqlite3.connect(sys.argv[1])
+          names = {r[0] for r in conn.execute(
+              "SELECT name FROM sqlite_master WHERE type='table'")}
+          need = {"diary_entries", "emotion_dictionary", "emotion_categories",
+                  "entry_emotion_tags", "meta"}
+          missing = need - names
+          if missing:
+              sys.exit(f"표가 빠졌습니다: {missing}")
+          words = conn.execute(
+              "SELECT COUNT(*) FROM emotion_dictionary").fetchone()[0]
+          print(f"표 {len(names)}개, 기본 감정 단어 {words}개")
+          if words == 0:
+              sys.exit("기본 단어가 심어지지 않았습니다")
+          PY
+
+          kill $APP_PID 2>/dev/null || true
+          echo "빌드된 .app 실행 확인 완료"
+
+      - name: 결과물 정보
+        run: |
+          du -sh dist/EmotionDiary.app
+          ls -lh dist/*.zip
+
+      - name: 배포본 내려받기용으로 올리기
+        uses: actions/upload-artifact@v4
+        with:
+          name: EmotionDiary-macOS-arm64
+          path: dist/*.zip
+          retention-days: 30

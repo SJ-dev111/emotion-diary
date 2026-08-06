@@ -1,0 +1,63 @@
+감정일기 (EmotionDiary) — 제3자 소프트웨어 고지
+================================================================
+
+이 프로그램은 아래 오픈소스 소프트웨어를 사용하며, 그 라이선스 조건에
+따라 함께 배포합니다.
+
+
+1. Qt / PySide6 / shiboken6
+----------------------------------------------------------------
+  이름    : Qt for Python (PySide6), shiboken6, Qt 라이브러리
+  버전    : PySide6 6.11.1 / shiboken6 6.11.1 / Qt 6.11.1
+  저작권  : Copyright (C) The Qt Company Ltd. and other contributors
+  라이선스: GNU Lesser General Public License version 3 (LGPL v3)
+  홈페이지: https://www.qt.io/qt-for-python
+
+  LGPL v3 전문은 같은 폴더의 LGPL-3.0.txt 에 있습니다.
+  LGPL v3는 GNU General Public License version 3의 조건에 추가 허가를
+  더하는 형태이므로, GPL v3 전문도 GPL-3.0.txt 로 함께 넣었습니다.
+
+  ▸ 소스 코드 입수
+    LGPL v3는 사용된 라이브러리의 소스를 받을 수 있어야 한다고 정합니다.
+    Qt와 PySide6의 소스는 아래에서 누구나 받을 수 있습니다.
+
+      Qt        : https://code.qt.io/cgit/qt/qt5.git/
+      PySide6   : https://code.qt.io/cgit/pyside/pyside-setup.git/
+      배포 파일 : https://download.qt.io/official_releases/QtForPython/
+
+    파이썬 패키지로 받으려면:  pip download PySide6==6.11.1
+
+  ▸ 라이브러리 교체
+    이 프로그램은 폴더 형태로 배포됩니다. Qt 라이브러리(.dll, .pyd)가
+    실행 파일 안에 합쳐지지 않고 _internal 폴더에 별도 파일로 들어 있어,
+    사용자가 같은 버전의 다른 빌드로 바꿔 넣을 수 있습니다. 이는 LGPL
+    v3가 요구하는 조건을 충족하기 위한 것입니다.
+
+  ▸ Qt 수정 여부
+    이 프로그램은 Qt를 수정하지 않고 공식 배포본을 그대로 사용합니다.
+
+
+2. Python
+----------------------------------------------------------------
+  버전    : Python 3.12
+  저작권  : Copyright (C) 2001-2024 Python Software Foundation
+  라이선스: Python Software Foundation License Version 2
+  홈페이지: https://www.python.org/
+  전문    : https://docs.python.org/3/license.html
+
+
+3. 이 프로그램에서 사용하지 않는 것
+----------------------------------------------------------------
+  아래는 GPL 전용이거나 재배포 조건이 까다로워 의도적으로 쓰지 않았습니다.
+
+  - PyQt6 (GPL) — PySide6와 기능이 겹치지만 라이선스가 다릅니다
+  - Qt Charts, Qt DataVisualization 등 GPL 전용 Qt 모듈
+    → 차트는 QPainter로 직접 그렸습니다
+  - 글꼴 파일 — 동봉하지 않고 사용자 PC에 설치된 글꼴을 사용합니다
+
+
+4. 프로그램 자체
+----------------------------------------------------------------
+  감정일기(EmotionDiary)는 학부 포트폴리오로 만든 개인 프로젝트입니다.
+  프로그램이 만들어 낸 일기 내용과 내보낸 문서의 권리는 전적으로 이를
+  작성한 사용자에게 있습니다.
